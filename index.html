@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLAM DUEL</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --gold:#C9A84C;--gold-light:#F0D080;--pink:#E8547A;--pink-light:#F7A8BB;
+    --bg:#0D0B14;--surface:#16131F;--surface2:#1E1A2E;--surface3:#262040;
+    --text:#F5F0E8;--text2:#A89FC0;--text3:#6B6080;
+    --green:#4CAF82;--purple:#9B6FE0;--amber:#E09B2F;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .hero{text-align:center;padding:2rem 1rem 1rem;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:400px;height:400px;background:radial-gradient(circle,rgba(201,168,76,0.12) 0%,transparent 70%);pointer-events:none}
+  .logo{font-family:'Playfair Display',serif;font-size:clamp(2rem,6vw,3.5rem);color:var(--gold);letter-spacing:0.05em}
+  .logo span{font-style:italic;color:var(--gold-light)}
+  .tagline{font-size:0.85rem;color:var(--text3);letter-spacing:0.15em;text-transform:uppercase;margin-top:0.3rem}
+  .phase{display:none}
+  .phase.active{display:block}
+  .steps{display:flex;justify-content:center;gap:8px;padding:1rem;flex-wrap:wrap}
+  .step-dot{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--text3);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);cursor:default;transition:all 0.3s}
+  .step-dot.done{background:var(--gold);border-color:var(--gold);color:#000}
+  .step-dot.active{border-color:var(--gold);color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,0.4)}
+  .wardrobe{max-width:900px;margin:0 auto;padding:0 1rem 2rem}
+  .section-title{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+  .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+  .stage{display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap}
+  .avatar-wrap{position:sticky;top:1rem;flex-shrink:0;width:160px}
+  .avatar-card{background:var(--surface);border:1px solid var(--surface3);border-radius:16px;padding:1rem;text-align:center}
+  .avatar-figure{width:120px;height:200px;margin:0 auto;position:relative;background:var(--surface2);border-radius:60px 60px 20px 20px;overflow:hidden;border:1px solid var(--surface3)}
+  .av-hair{position:absolute;top:0;left:0;right:0;height:60px;transition:all 0.3s}
+  .av-face{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:52px;height:62px;background:#F5D5B0;border-radius:50% 50% 45% 45%;border:1.5px solid rgba(0,0,0,0.1)}
+  .av-eyes{position:absolute;top:30px;left:50%;transform:translateX(-50%);width:36px;display:flex;justify-content:space-between}
+  .av-eye{width:7px;height:7px;background:#2C1A0E;border-radius:50%}
+  .av-mouth{position:absolute;top:50px;left:50%;transform:translateX(-50%);width:14px;height:5px;border-bottom:2px solid #C06060;border-radius:0 0 10px 10px}
+  .av-body{position:absolute;bottom:0;left:0;right:0;height:110px;transition:all 0.3s;border-radius:0 0 18px 18px}
+  .av-legs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:50px;height:40px;display:flex;gap:6px}
+  .av-leg{flex:1;border-radius:4px 4px 0 0;transition:all 0.3s}
+  .av-shoes{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:56px;display:flex;gap:4px}
+  .av-shoe{flex:1;height:10px;border-radius:2px;transition:all 0.3s}
+  .av-phone{position:absolute;top:60px;right:-14px;width:14px;height:22px;border-radius:3px;border:1.5px solid rgba(255,255,255,0.3);transition:all 0.3s;display:none}
+  .av-phone.show{display:block}
+  .avatar-label{font-size:11px;color:var(--text3);margin-top:0.5rem}
+  .options-area{flex:1;min-width:260px}
+  .category-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+  .ctab{padding:5px 12px;border-radius:20px;border:1px solid var(--surface3);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text2);transition:all 0.2s}
+  .ctab.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600}
+  .options-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px}
+  .option-card{background:var(--surface);border:1.5px solid var(--surface3);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+  .option-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+  .option-card.selected{border-color:var(--gold);background:rgba(201,168,76,0.12)}
+  .option-card.selected::after{content:'✓';position:absolute;top:5px;right:7px;font-size:10px;color:var(--gold);font-weight:700}
+  .opt-icon{font-size:1.8rem;line-height:1;margin-bottom:4px}
+  .opt-name{font-size:11px;color:var(--text2);line-height:1.2}
+  .action-row{text-align:center;padding:1.5rem 0}
+  .btn-primary{background:linear-gradient(135deg,var(--gold),var(--amber));color:#000;border:none;padding:12px 32px;border-radius:30px;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;letter-spacing:0.02em}
+  .btn-primary:hover{transform:scale(1.04);box-shadow:0 4px 20px rgba(201,168,76,0.4)}
+  .btn-secondary{background:transparent;color:var(--text2);border:1px solid var(--surface3);padding:10px 24px;border-radius:30px;font-size:0.9rem;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+  .btn-secondary:hover{border-color:var(--text2)}
+  .duel-arena{max-width:900px;margin:0 auto;padding:1rem}
+  .vs-row{display:flex;align-items:center;gap:1rem;justify-content:center;flex-wrap:wrap}
+  .combatant{background:var(--surface);border:1px solid var(--surface3);border-radius:20px;padding:1.5rem;flex:1;min-width:220px;max-width:300px;text-align:center;position:relative;transition:all 0.4s}
+  .combatant.winner{border-color:var(--gold);box-shadow:0 0 24px rgba(201,168,76,0.3)}
+  .combatant.loser{opacity:0.6}
+  .combatant-name{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold);margin-bottom:0.75rem}
+  .combatant-avatar{width:100px;height:160px;margin:0 auto 1rem;position:relative;background:var(--surface2);border-radius:50px 50px 15px 15px;overflow:hidden;border:1px solid var(--surface3)}
+  .vs-badge{width:48px;height:48px;border-radius:50%;background:var(--pink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0;box-shadow:0 0 20px rgba(232,84,122,0.5)}
+  .score-bar{margin-top:0.75rem}
+  .score-label{font-size:12px;color:var(--text3);margin-bottom:4px}
+  .score-track{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+  .score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--amber));transition:width 1s ease;width:0}
+  .score-number{font-size:1.4rem;font-weight:600;color:var(--text);margin-top:6px}
+  .likes-row{display:flex;justify-content:center;gap:1.5rem;padding:1rem;flex-wrap:wrap}
+  .like-btn{display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:20px;border:1px solid var(--surface3);background:var(--surface);cursor:pointer;color:var(--text2);font-size:14px;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+  .like-btn:hover{border-color:var(--pink);color:var(--pink)}
+  .like-btn.liked{background:rgba(232,84,122,0.15);border-color:var(--pink);color:var(--pink)}
+  .like-count{font-weight:600}
+  .verdict-box{background:var(--surface);border:1px solid var(--gold);border-radius:20px;padding:1.5rem;max-width:600px;margin:1rem auto;text-align:center}
+  .verdict-title{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);margin-bottom:0.75rem}
+  .verdict-text{color:var(--text2);line-height:1.6;font-size:0.95rem;white-space:pre-wrap}
+  .loading-dots::after{content:'...';animation:dots 1.2s infinite}
+  @keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
+  .bots-row{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin:1rem 0}
+  .bot-card{background:var(--surface2);border:1px solid var(--surface3);border-radius:16px;padding:1rem;text-align:center;min-width:120px;cursor:pointer;transition:all 0.2s}
+  .bot-card:hover{border-color:var(--purple);transform:translateY(-3px)}
+  .bot-card.challenged{border-color:var(--pink);background:rgba(232,84,122,0.1)}
+  .bot-card-name{font-size:12px;color:var(--text2);margin-top:6px}
+  .bot-card-style{font-size:10px;color:var(--text3)}
+  .crown{font-size:2rem;animation:float 2s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .leaderboard{max-width:500px;margin:1rem auto;background:var(--surface);border:1px solid var(--surface3);border-radius:16px;overflow:hidden}
+  .lb-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--surface3);font-size:13px}
+  .lb-row:last-child{border-bottom:none}
+  .lb-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+  .lb-rank.r1{background:var(--gold);color:#000}
+  .lb-rank.r2{background:var(--text3);color:#000}
+  .lb-rank.r3{background:#CD7F32;color:#000}
+  .lb-rank.rn{background:var(--surface3);color:var(--text2)}
+  .lb-name{flex:1;color:var(--text)}
+  .lb-score{color:var(--gold);font-weight:600}
+  .lb-badge{font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px}
+  .lb-you{background:rgba(201,168,76,0.2);color:var(--gold)}
+  .lb-bot{background:rgba(155,111,224,0.2);color:var(--purple)}
+  @media(max-width:560px){
+    .stage{flex-direction:column}
+    .avatar-wrap{width:100%;position:relative}
+    .avatar-card{display:flex;align-items:center;gap:1rem;text-align:left}
+    .avatar-figure{width:80px;height:130px;flex-shrink:0}
+  }
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="logo">GLAM <span>Duel</span></div>
+  <div class="tagline">Одевайся · Сражайся · Побеждай</div>
+</div>
+<div class="steps" id="stepsBar">
+  <div class="step-dot active" id="sd0">1</div>
+  <div class="step-dot" id="sd1">2</div>
+  <div class="step-dot" id="sd2">3</div>
+  <div class="step-dot" id="sd3">4</div>
+  <div class="step-dot" id="sd4">5</div>
+  <div class="step-dot" id="sd5">★</div>
+</div>
+
+<div class="phase active" id="phase1">
+  <div class="wardrobe">
+    <div class="section-title">Создай свой образ</div>
+    <div class="stage">
+      <div class="avatar-wrap">
+        <div class="avatar-card">
+          <div class="avatar-figure" id="mainAvatar">
+            <div style="position:absolute;inset:0">
+              <div class="av-hair" id="av-hair" style="background:#3B2314;border-radius:40px 40px 0 0"></div>
+              <div class="av-face">
+                <div class="av-eyes"><div class="av-eye"></div><div class="av-eye"></div></div>
+                <div class="av-mouth"></div>
+              </div>
+              <div class="av-body" id="av-body" style="background:#7B5EA7"></div>
+              <div class="av-legs">
+                <div class="av-leg" id="av-leg-l" style="background:#F5D5B0"></div>
+                <div class="av-leg" id="av-leg-r" style="background:#F5D5B0"></div>
+              </div>
+              <div class="av-shoes">
+                <div class="av-shoe" id="av-shoe-l" style="background:#333"></div>
+                <div class="av-shoe" id="av-shoe-r" style="background:#333"></div>
+              </div>
+              <div class="av-phone" id="av-phone"></div>
+            </div>
+          </div>
+          <div class="avatar-label">Ваш образ</div>
+        </div>
+      </div>
+      <div class="options-area">
+        <div class="category-tabs" id="catTabs"></div>
+        <div class="options-grid" id="optGrid"></div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn-primary" onclick="goToDuel()">Выйти на подиум →</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase" id="phase2">
+  <div class="duel-arena">
+    <div class="section-title" style="justify-content:center;text-align:center">Выбери соперника</div>
+    <div class="bots-row" id="botsRow"></div>
+    <div class="action-row">
+      <button class="btn-secondary" onclick="showPhase(1)">← Назад</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase" id="phase3">
+  <div class="duel-arena">
+    <div class="section-title" style="justify-content:center;text-align:center">Дуэль стилей</div>
+    <div class="vs-row">
+      <div class="combatant" id="c-you">
+        <div class="combatant-name">Ты</div>
+        <div class="combatant-avatar" id="duel-you"></div>
+        <div class="score-bar">
+          <div class="score-label">Оценка</div>
+          <div class="score-track"><div class="score-fill" id="sf-you"></div></div>
+          <div class="score-number" id="sn-you">—</div>
+        </div>
+        <div class="likes-row" style="padding:0.5rem 0">
+          <button class="like-btn" id="lb-fire" onclick="like('fire')">🔥 <span class="like-count" id="lc-fire">0</span></button>
+          <button class="like-btn" id="lb-heart" onclick="like('heart')">❤️ <span class="like-count" id="lc-heart">0</span></button>
+        </div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="combatant" id="c-bot">
+        <div class="combatant-name" id="bot-name-display">Bot</div>
+        <div class="combatant-avatar" id="duel-bot"></div>
+        <div class="score-bar">
+          <div class="score-label">Оценка</div>
+          <div class="score-track"><div class="score-fill" id="sf-bot"></div></div>
+          <div class="score-number" id="sn-bot">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="verdict-box" id="verdictBox" style="display:none">
+      <div class="verdict-title" id="verdictTitle">Оценка жюри</div>
+      <div class="verdict-text" id="verdictText"><span class="loading-dots">Жюри совещается</span></div>
+    </div>
+    <div class="action-row" id="nextActions" style="display:none">
+      <button class="btn-primary" onclick="showLeaderboard()">Таблица лидеров →</button>
+      <br><br>
+      <button class="btn-secondary" onclick="restart()">Сыграть ещё раз</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase" id="phase4">
+  <div class="duel-arena">
+    <div class="section-title" style="justify-content:center;text-align:center">🏆 Таблица лидеров</div>
+    <div class="leaderboard" id="lbTable"></div>
+    <div class="action-row">
+      <button class="btn-primary" onclick="restart()">Новая игра</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES=[
+  {id:'hair',label:'💇 Причёска',opts:[
+    {id:'h1',name:'Каре',icon:'💆',color:'#3B2314',style:'border-radius:40px 40px 0 0;height:55px'},
+    {id:'h2',name:'Хвост',icon:'👱',color:'#B8860B',style:'border-radius:40px 40px 50% 50%;height:45px'},
+    {id:'h3',name:'Кудри',icon:'💁',color:'#8B0000',style:'border-radius:50% 50% 30% 30%;height:70px'},
+    {id:'h4',name:'Каштан',icon:'🧑',color:'#8B4513',style:'border-radius:40px 40px 0 0;height:60px'},
+    {id:'h5',name:'Блонд',icon:'👩',color:'#F5E347',style:'border-radius:40px 40px 0 0;height:55px'},
+    {id:'h6',name:'Синий',icon:'💙',color:'#1E90FF',style:'border-radius:50% 50% 0 0;height:65px'},
+  ]},
+  {id:'outfit',label:'👗 Одежда',opts:[
+    {id:'o1',name:'Платье',icon:'👗',color:'#E8547A',legColor:'#F5D5B0'},
+    {id:'o2',name:'Деловой',icon:'👔',color:'#2C3E6B',legColor:'#2C3E6B'},
+    {id:'o3',name:'Спорт',icon:'🏃',color:'#E09B2F',legColor:'#4CAF82'},
+    {id:'o4',name:'Джинсы',icon:'👖',color:'#4B6FA5',legColor:'#2B4075'},
+    {id:'o5',name:'Вечернее',icon:'✨',color:'#1A0B2E',legColor:'#F5D5B0'},
+    {id:'o6',name:'Летнее',icon:'🌸',color:'#FFB6C1',legColor:'#F5D5B0'},
+  ]},
+  {id:'shoes',label:'👟 Обувь',opts:[
+    {id:'s1',name:'Кроссовки',icon:'👟',color:'#FFF',accent:'#E8547A'},
+    {id:'s2',name:'Каблуки',icon:'👠',color:'#E8547A',accent:'#A0304A'},
+    {id:'s3',name:'Ботинки',icon:'🥾',color:'#4B3728',accent:'#2A1F15'},
+    {id:'s4',name:'Кеды',icon:'👟',color:'#333',accent:'#FFF'},
+    {id:'s5',name:'Мюли',icon:'🩴',color:'#C9A84C',accent:'#8B6914'},
+    {id:'s6',name:'Угги',icon:'🦮',color:'#C4A882',accent:'#8B7355'},
+  ]},
+  {id:'phone',label:'📱 Телефон',opts:[
+    {id:'p1',name:'iPhone',icon:'📱',bg:'#1A1A1A',border:'#555'},
+    {id:'p2',name:'Samsung',icon:'📲',bg:'#0A3D5E',border:'#1E90FF'},
+    {id:'p3',name:'Без телефона',icon:'🙅',bg:null},
+    {id:'p4',name:'Розовый',icon:'💗',bg:'#E8547A',border:'#FFB6C1'},
+    {id:'p5',name:'Золотой',icon:'✨',bg:'#C9A84C',border:'#F0D080'},
+  ]},
+];
+const BOTS=[
+  {id:'bot1',name:'StyleBot 9000',emoji:'🤖',style:'Гламур',picks:{hair:'h5',outfit:'o5',shoes:'s2',phone:'p5'}},
+  {id:'bot2',name:'FashionAI',emoji:'👾',style:'Спортшик',picks:{hair:'h2',outfit:'o3',shoes:'s1',phone:'p2'}},
+  {id:'bot3',name:'TrendBot',emoji:'🦾',style:'Офисный',picks:{hair:'h4',outfit:'o2',shoes:'s3',phone:'p1'}},
+  {id:'bot4',name:'VogueBot',emoji:'💅',style:'Романтика',picks:{hair:'h3',outfit:'o6',shoes:'s5',phone:'p4'}},
+];
+let selections={hair:null,outfit:null,shoes:null,phone:null};
+let activeCat='hair';
+let challengedBot=null;
+let likes={fire:0,heart:0};
+let likedBtns={};
+let userScore=0,botScore=0;
+let leaderboardData=[];
+
+function buildTabs(){
+  const tb=document.getElementById('catTabs');tb.innerHTML='';
+  CATEGORIES.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='ctab'+(c.id===activeCat?' active':'');
+    b.textContent=c.label;
+    b.onclick=()=>{activeCat=c.id;buildTabs();buildGrid()};
+    tb.appendChild(b);
+  });
+}
+function buildGrid(){
+  const g=document.getElementById('optGrid');g.innerHTML='';
+  const cat=CATEGORIES.find(c=>c.id===activeCat);
+  cat.opts.forEach(o=>{
+    const d=document.createElement('div');
+    d.className='option-card'+(selections[activeCat]===o.id?' selected':'');
+    d.innerHTML=`<div class="opt-icon">${o.icon}</div><div class="opt-name">${o.name}</div>`;
+    d.onclick=()=>{selections[activeCat]=o.id;buildGrid();updateAvatar()};
+    g.appendChild(d);
+  });
+}
+function updateAvatar(){
+  const h=selections.hair,o=selections.outfit,s=selections.shoes,p=selections.phone;
+  if(h){const ho=CATEGORIES[0].opts.find(x=>x.id===h);const hair=document.getElementById('av-hair');hair.style.cssText='background:'+ho.color+';'+ho.style}
+  if(o){const oo=CATEGORIES[1].opts.find(x=>x.id===o);document.getElementById('av-body').style.background=oo.color;document.getElementById('av-leg-l').style.background=oo.legColor;document.getElementById('av-leg-r').style.background=oo.legColor;}
+  if(s){const so=CATEGORIES[2].opts.find(x=>x.id===s);document.getElementById('av-shoe-l').style.background=so.color;document.getElementById('av-shoe-r').style.background=so.color;}
+  const ph=document.getElementById('av-phone');
+  if(p&&p!=='p3'){const po=CATEGORIES[3].opts.find(x=>x.id===p);ph.className='av-phone show';ph.style.background=po.bg||'#1A1A1A';ph.style.borderColor=po.border||'#555';}
+  else{ph.className='av-phone';}
+  updateSteps();
+}
+function updateSteps(){
+  const cats=['hair','outfit','shoes','phone'];
+  let done=0;
+  cats.forEach((c,i)=>{const d=document.getElementById('sd'+i);if(selections[c]){d.className='step-dot done';done++}else if(i===done){d.className='step-dot active'}});
+}
+function renderMiniAvatar(container,picks){
+  const h=CATEGORIES[0].opts.find(x=>x.id==picks.hair)||CATEGORIES[0].opts[0];
+  const o=CATEGORIES[1].opts.find(x=>x.id==picks.outfit)||CATEGORIES[1].opts[0];
+  const s=CATEGORIES[2].opts.find(x=>x.id==picks.shoes)||CATEGORIES[2].opts[0];
+  const p=picks.phone&&picks.phone!='p3'?CATEGORIES[3].opts.find(x=>x.id==picks.phone):null;
+  container.style.position='relative';
+  container.innerHTML=`
+    <div style="position:absolute;top:0;left:0;right:0;height:40px;background:${h.color};border-radius:35px 35px 0 0;${h.style||''}"></div>
+    <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:36px;height:42px;background:#F5D5B0;border-radius:50% 50% 45% 45%;">
+      <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);width:26px;display:flex;justify-content:space-between">
+        <div style="width:5px;height:5px;background:#2C1A0E;border-radius:50%"></div>
+        <div style="width:5px;height:5px;background:#2C1A0E;border-radius:50%"></div>
+      </div>
+    </div>
+    <div style="position:absolute;bottom:25px;left:0;right:0;height:72px;background:${o.color};border-radius:0 0 12px 12px"></div>
+    <div style="position:absolute;bottom:15px;left:50%;transform:translateX(-50%);width:34px;display:flex;gap:4px">
+      <div style="flex:1;height:22px;background:${o.legColor};border-radius:3px 3px 0 0"></div>
+      <div style="flex:1;height:22px;background:${o.legColor};border-radius:3px 3px 0 0"></div>
+    </div>
+    <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:38px;display:flex;gap:3px">
+      <div style="flex:1;height:8px;background:${s.color};border-radius:2px"></div>
+      <div style="flex:1;height:8px;background:${s.color};border-radius:2px"></div>
+    </div>
+    ${p?`<div style="position:absolute;top:40px;right:-8px;width:9px;height:14px;border-radius:2px;background:${p.bg};border:1px solid ${p.border||'#555'}"></div>`:''}
+  `;
+}
+function buildBots(){
+  const row=document.getElementById('botsRow');row.innerHTML='';
+  BOTS.forEach(b=>{
+    const d=document.createElement('div');
+    d.className='bot-card';
+    d.innerHTML=`<div style="font-size:2rem">${b.emoji}</div><div class="bot-card-name">${b.name}</div><div class="bot-card-style">${b.style}</div>`;
+    d.onclick=()=>{document.querySelectorAll('.bot-card').forEach(x=>x.classList.remove('challenged'));d.classList.add('challenged');challengedBot=b;setTimeout(()=>startDuel(b),400)};
+    row.appendChild(d);
+  });
+}
+function goToDuel(){
+  CATEGORIES.forEach(c=>{if(!selections[c.id])selections[c.id]=c.opts[Math.floor(Math.random()*c.opts.length)].id});
+  updateAvatar();showPhase(2);buildBots();markStep(4);
+}
+function startDuel(bot){
+  showPhase(3);markStep(5);
+  document.getElementById('bot-name-display').textContent=bot.name+' '+bot.emoji;
+  renderMiniAvatar(document.getElementById('duel-you'),selections);
+  renderMiniAvatar(document.getElementById('duel-bot'),bot.picks);
+  const vb=document.getElementById('verdictBox');vb.style.display='block';
+  document.getElementById('verdictTitle').textContent='Жюри оценивает...';
+  document.getElementById('verdictText').innerHTML='<span class="loading-dots">Жюри совещается</span>';
+  document.getElementById('nextActions').style.display='none';
+  callJudge(buildOutfitDesc(selections),buildOutfitDesc(bot.picks),bot.name);
+}
+function buildOutfitDesc(picks){
+  const h=CATEGORIES[0].opts.find(x=>x.id==picks.hair);
+  const o=CATEGORIES[1].opts.find(x=>x.id==picks.outfit);
+  const s=CATEGORIES[2].opts.find(x=>x.id==picks.shoes);
+  const p=picks.phone&&picks.phone!='p3'?CATEGORIES[3].opts.find(x=>x.id==picks.phone):null;
+  return `Причёска: ${h?h.name:'не выбрана'}, Одежда: ${o?o.name:'нет'}, Обувь: ${s?s.name:'нет'}${p?', Телефон: '+p.name:''}`;
+}
+async function callJudge(myOutfit,botOutfit,botName){
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:`Ты строгий и остроумный судья конкурса моды. Оцени два образа по шкале от 1 до 10. Будь честным, с юмором, как настоящий модный критик.\n\nУчастник 1 (Игрок): ${myOutfit}\nУчастник 2 (${botName}): ${botOutfit}\n\nОтветь строго в формате JSON без markdown:\n{"score_player":(1-10),"score_bot":(1-10),"verdict_player":"оценка образа игрока 1-2 предложения","verdict_bot":"оценка бота","winner":"player или bot","final_comment":"финальный яркий вердикт"}`}]})});
+    const data=await res.json();
+    const raw=data.content.map(i=>i.text||'').join('');
+    const clean=raw.replace(/```json|```/g,'').trim();
+    showVerdict(JSON.parse(clean));
+  }catch(e){
+    const ps=5+Math.floor(Math.random()*5),bs=5+Math.floor(Math.random()*5);
+    showVerdict({score_player:ps,score_bot:bs,verdict_player:'Стильный образ с характером!',verdict_bot:'Бот тоже постарался.',winner:ps>=bs?'player':'bot',final_comment:ps>=bs?'Игрок блистает на подиуме! 🌟':'Бот сегодня в ударе! 🤖'});
+  }
+}
+function showVerdict(j){
+  userScore=j.score_player;botScore=j.score_bot;
+  setTimeout(()=>{
+    document.getElementById('sf-you').style.width=(userScore*10)+'%';
+    document.getElementById('sf-bot').style.width=(botScore*10)+'%';
+    document.getElementById('sn-you').textContent=userScore+'/10';
+    document.getElementById('sn-bot').textContent=botScore+'/10';
+  },200);
+  if(j.winner==='player'){document.getElementById('c-you').classList.add('winner');document.getElementById('c-bot').classList.add('loser')}
+  else{document.getElementById('c-bot').classList.add('winner');document.getElementById('c-you').classList.add('loser')}
+  document.getElementById('verdictTitle').innerHTML=(j.winner==='player'?'<span class="crown">👑</span> Победа!':'Результаты жюри');
+  document.getElementById('verdictText').textContent=`Ваш образ: ${j.verdict_player}\n\nОбраз бота: ${j.verdict_bot}\n\n✨ ${j.final_comment}`;
+  document.getElementById('nextActions').style.display='block';
+  updateLeaderboard();
+}
+function updateLeaderboard(){
+  const ex=leaderboardData.find(r=>r.you);
+  if(ex){ex.score=userScore}else{leaderboardData.push({name:'Вы',score:userScore,you:true})}
+  BOTS.forEach(b=>{if(!leaderboardData.find(r=>r.name===b.name)){leaderboardData.push({name:b.name+' '+b.emoji,score:Math.floor(4+Math.random()*5),bot:true})}});
+  leaderboardData.sort((a,b)=>b.score-a.score);
+}
+function showLeaderboard(){
+  showPhase(4);
+  const tb=document.getElementById('lbTable');tb.innerHTML='';
+  leaderboardData.slice(0,6).forEach((r,i)=>{
+    const row=document.createElement('div');row.className='lb-row';
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+    row.innerHTML=`<div class="lb-rank ${rc}">${i+1}</div><div class="lb-name">${r.name}${r.you?'<span class="lb-badge lb-you">Вы</span>':''}${r.bot?'<span class="lb-badge lb-bot">Bot</span>':''}</div><div class="lb-score">${r.score}/10</div>`;
+    tb.appendChild(row);
+  });
+}
+function like(type){
+  if(likedBtns[type])return;likedBtns[type]=true;likes[type]++;
+  document.getElementById('lc-'+type).textContent=likes[type];
+  document.getElementById('lb-'+type).classList.add('liked');
+}
+function markStep(n){for(let i=0;i<=n;i++){const d=document.getElementById('sd'+i);if(d)d.className='step-dot done'}}
+function showPhase(n){document.querySelectorAll('.phase').forEach((p,i)=>p.classList.toggle('active',i===n-1))}
+function restart(){
+  selections={hair:null,outfit:null,shoes:null,phone:null};activeCat='hair';likes={fire:0,heart:0};likedBtns={};
+  document.querySelectorAll('.step-dot').forEach((d,i)=>d.className='step-dot'+(i===0?' active':''));
+  document.querySelectorAll('.combatant').forEach(c=>{c.classList.remove('winner','loser')});
+  document.getElementById('sf-you').style.width='0';document.getElementById('sf-bot').style.width='0';
+  document.getElementById('sn-you').textContent='—';document.getElementById('sn-bot').textContent='—';
+  updateAvatar();showPhase(1);buildTabs();buildGrid();
+}
+buildTabs();buildGrid();
+</script>
+</body>
+</html>
